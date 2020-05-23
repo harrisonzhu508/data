@@ -1,12 +1,28 @@
 [
     {
+        "url": "https://public.tableau.com/views/DPHIdahoCOVID-19Dashboard_V2/Story1?%3Aembed=y&%3AshowVizHome=no&%3Adisplay_count=y&%3Adisplay_static_image=y&%3AbootstrapWhenNotified=true",
+        "cmd": "dynamic_download",
+        "screenshot": true,
+        "output": "US_Idaho-cases-time-series-stratified.png"
+    },
+    {
         "url": "https://www.cdph.ca.gov/Programs/CID/DCDC/Pages/COVID-19/Race-Ethnicity.aspx",
         "cmd": "static_download",
         "output": "US_CA-mortality-stratified.html"
     },
     {
+        "url": "https://coronavirus.iowa.gov/pages/case-counts",
+        "cmd": "static_download",
+        "output": "US_Ioawa-cases-deaths.html"
+    },
+    {
+        "url": "https://covid19.colorado.gov/data/case-data",
+        "cmd": "static_download",
+        "output": "US_CO-cases-deaths.html"
+    },
+    {
         "url": "https://public.domo.com/embed/pages/aQVpq/cards/1308116147/render?parts=dynamic,summary,annotations",
-        "cmd": "curl",
+        "cmd": "dynamic_download",
         "method": "PUT",
         "headers": {
             "content-type": "application/json; charset=UTF-8",
@@ -29,11 +45,11 @@
         "cmd": "dynamic_download",
         "screenshot": true,
         "output": "US_KS-mortality-stratified.png"
-    },
+    },    
     {
         "url": "https://public.tableau.com/views/EpiProfile/DemoStory?%3Aembed=y&%3AshowVizHome=no",
         "cmd": "dynamic_download",
         "screenshot": true,
         "output": "US_SC-mortality-stratified.png"
-    }
+    }        
 ]
