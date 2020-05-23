@@ -32,9 +32,9 @@ jobs:
     - name: Clone previous cache data
       working-directory: cache
       run: |
-        git clone https://@github.com/open-covid-19/data --single-branch -b cache output
-        git config --global user.name open-covid-bot
-        git config --global user.email open-covid-bot@${{ github.repository }}
+        git clone https://@github.com/harrisonzhu508/data --single-branch -b cache output
+        git config --global user.name "GitHub Action"
+        git config --global user.email action@github.com
 
     - name: Cache data sources
       working-directory: cache
@@ -44,5 +44,5 @@ jobs:
         git add -f .
         git commit -m "Automatic cache update"
         git push \
-          "https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/open-covid-19/data.git" \
+          "https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/harrisonzhu508/data.git" \
           HEAD:cache
