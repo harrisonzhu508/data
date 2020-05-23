@@ -22,6 +22,12 @@
         "url": "https://public.tableau.com/views/COVID-19TableauVersion2/AgeandDemographics?%3Aembed=y&amp%3B%3AshowVizHome=no",
         "cmd": "dynamic_download",
         "screenshot": true,
+        "output": "US_KS-cases-stratified.png"
+    },
+    {
+        "url": "https://public.tableau.com/views/COVID-19TableauVersion2/DeathSummary?%3Aembed=y&amp%3B%3AshowVizHome=no",
+        "cmd": "dynamic_download",
+        "screenshot": true,
         "output": "US_KS-mortality-stratified.png"
     },
     {
