@@ -1,1 +1,1 @@
-<html><head></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">{"status":405,"statusReason":"Method Not Allowed","message":"Not allowed","toe":"AF4SM6SOQU-AONGV-CT208"}</pre></body></html>
+{"status":400,"statusReason":"Internal Server Error","path":"/embed/pages/aQVpq/cards/1308116147/render","message":"java.lang.IllegalArgumentException: org.springframework.security.authentication.BadCredentialsException: Failed to verify jwt signature. Maybe the token is expired.","toe":"Q6T7EAS2NT-LICJB-JSEIU"}
