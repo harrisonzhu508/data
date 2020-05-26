@@ -1,6 +1,5 @@
 import re
 import sys
-import json
 import warnings
 import traceback
 import subprocess
@@ -10,13 +9,14 @@ from functools import partial
 from multiprocessing import cpu_count
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import numpy
 import requests
-from multiprocess import Pool
-from pandas import DataFrame, isnull, isna, read_csv
+from pandas import DataFrame, isnull, isna, read_csv, NA
 from tqdm import tqdm
 
 from .anomaly import detect_anomaly_all, detect_stale_columns
 from .cast import column_convert
+from .concurrent import process_map
 from .net import download
 from .io import read_file, fuzzy_text
 from .utils import ROOT, CACHE_URL, column_convert, combine_tables
@@ -73,8 +73,42 @@ class DataPipeline:
         # Make yet another copy of the auxiliary table to avoid affecting future steps in `parse`
         data = self.parse(data, {name: df.copy() for name, df in aux.items()}, **(parse_opts or {}))
 
-        # Merging is done record by record
-        data["key"] = data.apply(lambda x: self.merge(x, aux), axis=1)
+        # Merge expects for null values to be NaN (otherwise grouping does not work as expected)
+        data.replace([None], numpy.nan, inplace=True)
+
+        # Merging is done record by record, but can be sped up if we build a map first aggregating
+        # by the non-temporal fields and only matching the aggregated records with keys
+        key_merge_columns = [
+            col for col in data if col in aux["metadata"].columns and len(data[col].unique()) > 1
+        ]
+        if not key_merge_columns or (merge_opts and merge_opts.get("serial")):
+            data["key"] = data.apply(lambda x: self.merge(x, aux), axis=1)
+
+        else:
+            # "_nan_magic_number" replacement necessary to work around
+            # https://github.com/pandas-dev/pandas/issues/3729
+            # This issue will be fixed in Pandas 1.1
+            _nan_magic_number = -123456789
+            grouped_data = (
+                data.fillna(_nan_magic_number)
+                .groupby(key_merge_columns)
+                .first()
+                .reset_index()
+                .replace([_nan_magic_number], numpy.nan)
+            )
+
+            # Build a _vec column used to merge the key back from the groups into data
+            make_key_vec = lambda x: "|".join([str(x[col]) for col in key_merge_columns])
+            grouped_data["_vec"] = grouped_data.apply(make_key_vec, axis=1)
+            data["_vec"] = data.apply(make_key_vec, axis=1)
+
+            # Iterate only over the grouped data to merge with the metadata key
+            grouped_data["key"] = grouped_data.apply(lambda x: self.merge(x, aux), axis=1)
+
+            # Merge the grouped data which has key back with the original data
+            if "key" in data.columns:
+                data = data.drop(columns=["key"])
+            data = data.merge(grouped_data[["key", "_vec"]], on="_vec").drop(columns=["_vec"])
 
         # Drop records which have no key merged
         # TODO: log records with missing key somewhere on disk
@@ -106,7 +140,7 @@ class DefaultPipeline(DataPipeline):
     fetch_opts: List[Dict[str, Any]] = []
     """ Fetch options; see [lib.net.download] for more details """
 
-    def fetch(self, cache: Dict[str, str], **fetch_opts) -> List[str]:
+    def fetch(self, cache: Dict[str, List[str]], **fetch_opts) -> List[str]:
         num_urls = len(self.data_urls)
         fetch_iter = zip(self.data_urls, self.fetch_opts or [{}] * num_urls)
         return [download(url, **{**opts, **fetch_opts}) for url, opts in fetch_iter]
@@ -154,23 +188,31 @@ class DefaultPipeline(DataPipeline):
 
         # Provided match string could be identical to `match_string` (or with simple fuzzy match)
         if match_string is not None:
-            aux_match_1 = metadata["match_regex"] == match_string
+            aux_match_1 = metadata["match_string_fuzzy"] == match_string
             if sum(aux_match_1) == 1:
                 return metadata[aux_match_1].iloc[0]["key"]
-            aux_match_2 = metadata["match_regex"] == record["match_string"]
+            aux_match_2 = metadata["match_string"] == record["match_string"]
             if sum(aux_match_2) == 1:
                 return metadata[aux_match_2].iloc[0]["key"]
 
         # Last resort is to match the `match_string` column with a regex from aux
         if match_string is not None:
-            aux_mask = ~metadata["match_regex"].isna()
-            aux_regex = metadata["match_regex"][aux_mask].apply(
+            aux_mask = ~metadata["match_string"].isna()
+            aux_regex = metadata["match_string"][aux_mask].apply(
                 lambda x: re.compile(x, re.IGNORECASE)
             )
-            aux_match = aux_regex.apply(lambda x: True if x.match(match_string) else False)
-            if sum(aux_match) == 1:
-                metadata = metadata[aux_mask]
-                return metadata[aux_match].iloc[0]["key"]
+            for search_string in (match_string, record["match_string"]):
+                aux_match = aux_regex.apply(lambda x: True if x.match(search_string) else False)
+                if sum(aux_match) == 1:
+                    metadata = metadata[aux_mask]
+                    return metadata[aux_match].iloc[0]["key"]
+
+            # Uncomment when debugging mismatches
+            # print(aux_regex)
+            # print(match_string)
+            # print(record)
+            # print(metadata)
+            # raise ValueError()
 
         warnings.warn("No key match found for:\n{}".format(record))
         return None
@@ -249,8 +291,8 @@ class PipelineChain:
 
     auxiliary_tables: Dict[str, Union[Path, str]] = {
         "metadata": ROOT / "src" / "data" / "metadata.csv",
-        "wikidata": ROOT / "src" / "data" / "wikidata.csv",
         "country_codes": ROOT / "src" / "data" / "country_codes.csv",
+        "knowledge_graph": ROOT / "src" / "data" / "knowledge_graph.csv",
     }
     """ Auxiliary datasets passed to the pipelines during processing """
 
@@ -295,7 +337,8 @@ class PipelineChain:
         self,
         pipeline_name: str,
         process_count: int = cpu_count(),
-        verify: bool = True,
+        verify: str = "simple",
+        progress: bool = True,
         **pipeline_opts,
     ) -> DataFrame:
         """
@@ -303,12 +346,17 @@ class PipelineChain:
         outputs.
         """
         # Read the cache directory from our cloud storage
-        cache = json.loads(requests.get("{}/sitemap.json".format(CACHE_URL)).text)
+        try:
+            cache = requests.get("{}/sitemap.json".format(CACHE_URL)).json()
+        except:
+            cache = {}
+            warnings.warn("Cache unavailable")
 
         # Read the auxiliary input files into memory
         aux = {name: read_file(file_name) for name, file_name in self.auxiliary_tables.items()}
 
         # Precompute some useful transformations in the auxiliary input files
+        aux["metadata"]["match_string_fuzzy"] = aux["metadata"].match_string.apply(fuzzy_text)
         for category in ("country", "subregion1", "subregion2"):
             for suffix in ("code", "name"):
                 column = "{}_{}".format(category, suffix)
@@ -318,58 +366,78 @@ class PipelineChain:
 
         # Get all the pipeline outputs
         # This operation is parallelized but output order is preserved
-        func_iter = [
+        map_iter = [
             # Make a copy of the auxiliary table to prevent modifying it for everyone, but this way
             # we allow for local modification (which might be wanted for optimization purposes)
             (
                 pipeline,
                 cache,
                 {name: df.copy() for name, df in aux.items()},
-                {**opts, **pipeline_opts},
+                # TODO: Combine nested attributes of dict instead of plain override
+                {"parse_opts": {"progress": progress}, **opts, **pipeline_opts},
             )
             for pipeline, opts in self.pipelines
         ]
 
         # If the process count is less than one, run in series (useful to evaluate performance)
-        if process_count <= 1 or len(func_iter) <= 1:
-            func_map = map(PipelineChain._run_wrapper, func_iter)
+        progress_label = f"Run {pipeline_name} pipeline"
+        if process_count <= 1 or len(map_iter) <= 1:
+            map_func = tqdm(
+                map(PipelineChain._run_wrapper, map_iter),
+                total=len(map_iter),
+                desc=progress_label,
+                disable=not progress,
+            )
         else:
-            func_map = Pool(process_count).imap(PipelineChain._run_wrapper, func_iter)
-
-        # Show progress as the results arrive
-        pipeline_results = tqdm(
-            func_map, total=len(func_iter), desc=f"Run {pipeline_name} pipeline"
-        )
+            map_func = process_map(
+                PipelineChain._run_wrapper, map_iter, desc=progress_label, disable=not progress,
+            )
 
         # Combine all pipeline outputs into a single DataFrame
-        pipeline_outputs = [result for result in pipeline_results if result is not None]
+        pipeline_outputs = [result for result in map_func if result is not None]
         if not pipeline_outputs:
             warnings.warn("Empty result for pipeline chain {}".format(pipeline_name))
             data = DataFrame(columns=self.schema.keys())
         else:
-            data = combine_tables(pipeline_outputs, ["date", "key"])
+            progress_label = pipeline_name if progress else None
+            data = combine_tables(pipeline_outputs, ["date", "key"], progress_label=progress_label)
 
         # Return data using the pipeline's output parameters
         data = self.output_table(data)
 
         # Skip anomaly detection unless requested
-        if verify:
+        if verify == "simple":
 
             # Validate that the table looks good
             detect_anomaly_all(self.schema, data, pipeline_name)
 
-            # Perform anomaly detection for each known key
-            func_iter = data.key.unique()
-            func_map = lambda key: detect_stale_columns(
+        if verify == "full":
+
+            # Perform stale column detection for each known key
+            map_iter = data.key.unique()
+            map_func = lambda key: detect_stale_columns(
                 self.schema, data[data.key == key], (pipeline_name, key)
             )
-            if process_count <= 1 or len(func_iter) <= 1:
-                func_map = map(func_map, func_iter)
+            progress_label = f"Verify {pipeline_name} pipeline"
+            if process_count <= 1 or len(map_iter) <= 1:
+                map_func = tqdm(
+                    map(map_func, map_iter),
+                    total=len(map_iter),
+                    desc=progress_label,
+                    disable=not progress,
+                )
             else:
-                func_map = Pool(process_count).imap(func_map, func_iter)
-            for result in tqdm(
-                func_map, total=len(func_iter), desc=f"Verify {pipeline_name} pipeline"
-            ):
-                pass
+                map_func = process_map(
+                    map_func, map_iter, desc=progress_label, disable=not progress,
+                )
+
+            # Show progress as the results arrive if requested
+            if progress:
+                map_func = tqdm(
+                    map_func, total=len(map_iter), desc=f"Verify {pipeline_name} pipeline"
+                )
+
+            # Consume the results
+            _ = list(map_func)
 
         return data

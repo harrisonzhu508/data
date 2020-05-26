@@ -15,13 +15,13 @@ datasets available from this project are:
 
 | Table | CSV URL | JSON URL |
 | ----- | ------- | -------- |
-| [Master](#master) | [master.csv](https://open-covid-19.github.io/data/v2/master.csv) | [master.json](https://open-covid-19.github.io/data/v2/master.json) |
+| [Master](#master) | [master.csv](https://open-covid-19.github.io/data/v2/master.csv) | N/A |
 | [Index](#index) | [index.csv](https://open-covid-19.github.io/data/v2/index.csv) | [index.json](https://open-covid-19.github.io/data/v2/index.json) |
 | [Demographics](#demographics) | [demographics.csv](https://open-covid-19.github.io/data/v2/demographics.csv) | [demographics.json](https://open-covid-19.github.io/data/v2/demographics.json) |
 | [Economy](#economy) | [economy.csv](https://open-covid-19.github.io/data/v2/economy.csv) | [economy.json](https://open-covid-19.github.io/data/v2/economy.json) |
 | [Epidemiology](#epidemiology) | [epidemiology.csv](https://open-covid-19.github.io/data/v2/epidemiology.csv) | [epidemiology.json](https://open-covid-19.github.io/data/v2/epidemiology.json) |
 | [Geography](#geography) | [geography.csv](https://open-covid-19.github.io/data/v2/geography.csv) | [geography.json](https://open-covid-19.github.io/data/v2/geography.json) |
-| [Google Mobility](#google-mobility) | [google-mobility.csv](https://open-covid-19.github.io/data/v2/google-mobility.csv) | [google-mobility.json](https://open-covid-19.github.io/data/v2/google-mobility.json) |
+| [Mobility](#mobility) | [mobility.csv](https://open-covid-19.github.io/data/v2/mobility.csv) | [google-mobility.json](https://open-covid-19.github.io/data/v2/google-mobility.json) |
 | [Oxford Government Response](#oxford-government-response) | [oxford-government-response.csv](https://open-covid-19.github.io/data/v2/oxford-government-response.csv) | [oxford-government-response.json](https://open-covid-19.github.io/data/v2/oxford-government-response.json) |
 | [Weather](#weather) | [weather.csv](https://open-covid-19.github.io/data/v2/weather.csv) | [weather.json](https://open-covid-19.github.io/data/v2/weather.json) |
 
@@ -59,11 +59,6 @@ table to get access to the ISO 3166 / NUTS / FIPS code, although administrative 
 not consistent among all reporting regions. For example, for the intra-country reporting, some EU
 countries use NUTS2, others NUTS3 and many ISO 3166-2 codes.
 
-NOTE: If you load data using `pandas`, make sure that you disable automatic parsing of NaN-like
-strings. Otherwise, the records for Namibia, which has country code `NA`, will be interpreted as a
-`NaN` value instead of the literal string `"NA"`. See the [python](#python) example below for how to
-set this option when reading CSV files.
-
 You can find several examples in the [examples subfolder](examples) with code showcasing how to load
 and analyze the data for several programming environments. If you want the short version, here are a
 few snippets to get started.
@@ -87,7 +82,7 @@ data = pandas.read_csv("https://open-covid-19.github.io/data/v2/master.csv")
 
 ### jQuery
 Loading the JSON file using jQuery can be done directly from the output folder,
-this code snippet loads all epidemiology data into the `data` variable:
+this code snippet loads the master table into the `data` variable:
 ```javascript
 $.getJSON("https://open-covid-19.github.io/data/v2/master.json", data => { ... }
 ```
@@ -96,8 +91,8 @@ $.getJSON("https://open-covid-19.github.io/data/v2/master.json", data => { ... }
 You can also use Powershell to get the latest data for a country directly from
 the command line, for example to query the latest data for Australia:
 ```powershell
-Invoke-WebRequest 'https://open-covid-19.github.io/data/v2/master.csv' | ConvertFrom-Csv | `
-    where Key -eq 'AU' | select country_name,total_confirmed,total_deceased,total_recovered
+Invoke-WebRequest 'https://open-covid-19.github.io/data/v2/latest/master.csv' | ConvertFrom-Csv | `
+    where Key -eq 'AU' | select country_name,date,total_confirmed,total_deceased,total_recovered
 ```
 
 ## Understand the data
@@ -110,7 +105,7 @@ reported.
 
 ### Master
 Flat table with records from all other tables joined by `key` and `date`. See below for information
-about all the tables and columns.
+about all the different tables and columns.
 
 ### Index
 Non-temporal data related to countries and regions. It includes keys, codes and names for each
@@ -227,21 +222,24 @@ Daily weather information from nearest station reported by NOAA:
 | **rainfall** | `double` `[millimeters]` | Rainfall during the entire day | 51.0 |
 | **snowfall** | `double` `[millimeters]` | Snowfall during the entire day | 0.0 |
 
-### Google Mobility
-Google's [Mobility Reports][17] are presented in CSV form as
-[google-mobility.csv](https://open-covid-19.github.io/data/v2/google-mobility.csv) with the
+### Mobility
+[Google's][17] and [Apple's][22] Mobility Reports] are presented in CSV form as
+[mobility.csv](https://open-covid-19.github.io/data/v2/mobility.csv) with the
 following columns:
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
 | **date** | `string` | ISO 8601 date (YYYY-MM-DD) of the datapoint | 2020-03-30 |
 | **key** | `string` | Unique string identifying the region | US_CA |
-| **transit_stations** | `double` `[%]` |  Percentage change in visits to transit station locations | -15 |
-| **retail_and_recreation** | `double` `[%]` |  Percentage change in visits to retail and recreation locations | -15 |
-| **grocery_and_pharmacy** | `double` `[%]` |  Percentage change in visits to grocery and pharmacy locations | -15 |
-| **parks** | `double` `[%]` |  Percentage change in visits to park locations | -15 |
-| **residential** | `double` `[%]` |  Percentage change in visits to residential locations | -15 |
-| **workplaces** | `double` `[%]` |  Percentage change in visits to workplace locations | -15 |
+| **mobility_driving** | `double` `[%]` |  Percentage change in movement via driving compared to baseline | -15 |
+| **mobility_transit** | `double` `[%]` |  Percentage change in movement via public transit compared to baseline | -15 |
+| **mobility_walking** | `double` `[%]` |  Percentage change in movement via walking compared to baseline | -15 |
+| **mobility_transit_stations** | `double` `[%]` |  Percentage change in visits to transit station locations compared to baseline | -15 |
+| **mobility_retail_and_recreation** | `double` `[%]` |  Percentage change in visits to retail and recreation locations compared to baseline | -15 |
+| **mobility_grocery_and_pharmacy** | `double` `[%]` |  Percentage change in visits to grocery and pharmacy locations compared to baseline | -15 |
+| **mobility_parks** | `double` `[%]` |  Percentage change in visits to park locations compared to baseline | -15 |
+| **mobility_residential** | `double` `[%]` |  Percentage change in visits to residential locations compared to baseline | -15 |
+| **mobility_workplaces** | `double` `[%]` |  Percentage change in visits to workplace locations compared to baseline | -15 |
 
 ### Notes about the data
 For countries where both country-level and subregion-level data is available, the entry which has a
@@ -266,6 +264,7 @@ the requested subset.
 Please note that the following datasets are maintained only to preserve backwards compatibility, but
 shouldn't be used in any new projects:
 * [Data](https://open-covid-19.github.io/data/data.csv)
+* [Latest](https://open-covid-19.github.io/data/data_latest.csv)
 * [Minimal](https://open-covid-19.github.io/data/data_minimal.csv)
 * [Forecast](https://open-covid-19.github.io/data/data_forecast.csv)
 * [Mobility](https://open-covid-19.github.io/data/mobility.csv)
@@ -369,3 +368,4 @@ See the [source documentation](src) for more technical details.
 [19]: https://auditter.info/covid-timeline
 [20]: https://www.coronavirusdailytracker.info/
 [21]: https://omnimodel.com/
+[22]: https://www.apple.com/covid19/mobility
