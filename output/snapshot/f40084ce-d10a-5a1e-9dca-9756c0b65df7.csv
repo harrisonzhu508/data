@@ -4384,11 +4384,7 @@ date,state,fips,cases,deaths
 2020-05-21,Michigan,26,53468,5129
 2020-05-21,Minnesota,27,18209,818
 2020-05-21,Mississippi,28,12222,580
-<<<<<<< HEAD:snapshot/f40084ce-d10a-5a1e-9dca-9756c0b65df7.csv
-2020-05-21,Missouri,29,11657,671
-=======
 2020-05-21,Missouri,29,11657,670
->>>>>>> upstream/master:output/snapshot/f40084ce-d10a-5a1e-9dca-9756c0b65df7.csv
 2020-05-21,Montana,30,479,16
 2020-05-21,Nebraska,31,11424,148
 2020-05-21,Nevada,32,7402,381
@@ -4443,11 +4439,7 @@ date,state,fips,cases,deaths
 2020-05-22,Michigan,26,53865,5158
 2020-05-22,Minnesota,27,19014,851
 2020-05-22,Mississippi,28,12624,596
-<<<<<<< HEAD:snapshot/f40084ce-d10a-5a1e-9dca-9756c0b65df7.csv
-2020-05-22,Missouri,29,11797,681
-=======
 2020-05-22,Missouri,29,11797,680
->>>>>>> upstream/master:output/snapshot/f40084ce-d10a-5a1e-9dca-9756c0b65df7.csv
 2020-05-22,Montana,30,479,16
 2020-05-22,Nebraska,31,11662,149
 2020-05-22,Nevada,32,7531,387
@@ -4475,9 +4467,6 @@ date,state,fips,cases,deaths
 2020-05-22,Washington,53,20274,1061
 2020-05-22,West Virginia,54,1705,72
 2020-05-22,Wisconsin,55,14557,496
-<<<<<<< HEAD:snapshot/f40084ce-d10a-5a1e-9dca-9756c0b65df7.csv
-2020-05-22,Wyoming,56,803,12
-=======
 2020-05-22,Wyoming,56,803,12
 2020-05-23,Alabama,01,14149,549
 2020-05-23,Alaska,02,409,8
@@ -4589,4 +4578,3 @@ date,state,fips,cases,deaths
 2020-05-24,West Virginia,54,1771,72
 2020-05-24,Wisconsin,55,15362,510
 2020-05-24,Wyoming,56,813,12
->>>>>>> upstream/master:output/snapshot/f40084ce-d10a-5a1e-9dca-9756c0b65df7.csv

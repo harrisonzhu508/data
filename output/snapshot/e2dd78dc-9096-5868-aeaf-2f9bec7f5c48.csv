@@ -25631,8 +25631,6 @@ Datum,Gemeentecode,Gemeentenaam,Provincienaam,Provinciecode,Aantal
 2020-05-23,1969,Westerkwartier,Groningen,20,14
 2020-05-23,1970,Noardeast-Fryslân,Friesland,21,6
 2020-05-23,1978,Molenlanden,Zuid-Holland,28,18
-<<<<<<< HEAD:snapshot/e2dd78dc-9096-5868-aeaf-2f9bec7f5c48.csv
-=======
 2020-05-24,-1,,,,63
 2020-05-24,3,Appingedam,Groningen,20,3
 2020-05-24,10,Delfzijl,Groningen,20,6
@@ -25989,4 +25987,3 @@ Datum,Gemeentecode,Gemeentenaam,Provincienaam,Provinciecode,Aantal
 2020-05-24,1969,Westerkwartier,Groningen,20,14
 2020-05-24,1970,Noardeast-Fryslân,Friesland,21,6
 2020-05-24,1978,Molenlanden,Zuid-Holland,28,18
->>>>>>> upstream/master:output/snapshot/e2dd78dc-9096-5868-aeaf-2f9bec7f5c48.csv

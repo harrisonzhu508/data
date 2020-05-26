@@ -41578,8 +41578,6 @@
         "casi_testati": 300799,
         "note_it": "",
         "note_en": ""
-<<<<<<< HEAD:snapshot/69a364cf-8913-5a3b-babd-d8b9dc02d4cc.json
-=======
     },
     {
         "data": "2020-05-24T17:00:00",
@@ -42504,6 +42502,5 @@
         "casi_testati": 308128,
         "note_it": "",
         "note_en": ""
->>>>>>> upstream/master:output/snapshot/69a364cf-8913-5a3b-babd-d8b9dc02d4cc.json
     }
 ]
