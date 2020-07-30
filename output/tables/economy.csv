@@ -35,7 +35,7 @@ AR_X,,
 AR_Y,,
 AR_Z,,
 AS,,11394
-AT,416595666397,47380
+AT,398682000000,44920
 AT_11,,
 AT_12,,
 AT_13,,
@@ -1463,15 +1463,7 @@ FR_BFC_70,,
 FR_BFC_71,,
 FR_BFC_89,,
 FR_BFC_90,,
-<<<<<<< HEAD:output/economy.csv
-FR_BL,,
-=======
->>>>>>> upstream/master:output/tables/economy.csv
 FR_BRE,,
-FR_BRE_22,,
-FR_BRE_29,,
-FR_BRE_35,,
-FR_BRE_56,,
 FR_COR,,
 FR_COR_2A,,
 FR_COR_2B,,
@@ -1493,10 +1485,6 @@ FR_GES_57,,
 FR_GES_67,,
 FR_GES_68,,
 FR_GES_88,,
-<<<<<<< HEAD:output/economy.csv
-FR_GF,,
-=======
->>>>>>> upstream/master:output/tables/economy.csv
 FR_GUA,,
 FR_HDF,,
 FR_HDF_02,,
@@ -1529,11 +1517,6 @@ FR_NAQ_79,,
 FR_NAQ_86,,
 FR_NAQ_87,,
 FR_NOR,,
-FR_NOR_14,,
-FR_NOR_27,,
-FR_NOR_50,,
-FR_NOR_61,,
-FR_NOR_76,,
 FR_OCC,,
 FR_OCC_09,,
 FR_OCC_11,,
@@ -1561,13 +1544,8 @@ FR_PDL_49,,
 FR_PDL_53,,
 FR_PDL_72,,
 FR_PDL_85,,
-<<<<<<< HEAD:output/economy.csv
-GA,2775000024000,283
-GB,72328047042,1380
-=======
 GA,14622880886,7413
 GB,2622433959604,39953
->>>>>>> upstream/master:output/tables/economy.csv
 GB_ENG,2286295170684,40000
 GB_ENG_E06000001,,
 GB_ENG_E06000002,,
