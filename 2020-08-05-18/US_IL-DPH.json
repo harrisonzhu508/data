@@ -1744,7 +1744,7 @@
         "testDate": "8/04/2020",
         "total_tested": 2849395,
         "confirmed_cases": 184712,
-        "deaths": 7545
+        "deaths": 7543
       },
       {
         "testDate": "8/05/2020",
@@ -3372,7 +3372,7 @@
             "County": "Illinois",
             "confirmed_cases": 184712,
             "total_tested": 2849395,
-            "deaths": 7545,
+            "deaths": 7543,
             "lat": 39.839888,
             "lon": -89.510168
           },
@@ -3459,7 +3459,7 @@
           {
             "County": "Chicago",
             "confirmed_cases": 62145,
-            "deaths": 2793,
+            "deaths": 2791,
             "total_tested": 690334,
             "lat": 41.789896,
             "lon": -87.627734
